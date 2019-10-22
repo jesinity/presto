@@ -32,6 +32,7 @@ import io.prestosql.spi.connector.ConnectorSession;
 import io.prestosql.spi.type.ArrayType;
 import io.prestosql.spi.type.Type;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.phoenix.compile.QueryPlan;
@@ -359,7 +360,7 @@ public class PhoenixClient
             PName physicalTableName = queryPlan.getTableRef().getTable().getPhysicalName();
             PhoenixConnection phoenixConnection = context.getConnection();
             ConnectionQueryServices services = phoenixConnection.getQueryServices();
-            services.clearTableRegionCache(physicalTableName.getBytes());
+            services.clearTableRegionCache(TableName.valueOf(physicalTableName.getBytes()));
 
             for (Scan scan : scans) {
                 scan = new Scan(scan);
