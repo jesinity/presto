@@ -23,8 +23,6 @@ import org.apache.phoenix.shaded.org.apache.zookeeper.server.ZooKeeperServer;
 
 import javax.annotation.concurrent.GuardedBy;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -115,11 +113,11 @@ public final class TestingPhoenixServer
         try {
             LOG.info("Shutting down HBase cluster.");
             hbaseTestingUtility.shutdownMiniHBaseCluster();
-            hbaseTestingUtility.shutdownMiniZKCluster();
+            hbaseTestingUtility.shutdownMiniCluster();
         }
-        catch (IOException e) {
+        catch (Exception e) {
             Thread.currentThread().interrupt();
-            throw new UncheckedIOException("Failed to shutdown HBaseTestingUtility instance", e);
+            throw new RuntimeException("Failed to shutdown HBaseTestingUtility instance", e);
         }
         hbaseTestingUtility = null;
     }
