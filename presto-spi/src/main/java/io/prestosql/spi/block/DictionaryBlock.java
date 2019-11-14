@@ -19,6 +19,7 @@ import org.openjdk.jol.info.ClassLayout;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
@@ -30,6 +31,7 @@ import static io.prestosql.spi.block.BlockUtil.checkValidRegion;
 import static io.prestosql.spi.block.BlockUtil.countUsedPositions;
 import static io.prestosql.spi.block.DictionaryId.randomDictionaryId;
 import static java.lang.Math.min;
+import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
 public class DictionaryBlock
@@ -90,13 +92,13 @@ public class DictionaryBlock
         this.dictionary = dictionary;
         this.ids = ids;
         this.dictionarySourceId = requireNonNull(dictionarySourceId, "dictionarySourceId is null");
-        this.retainedSizeInBytes = INSTANCE_SIZE + dictionary.getRetainedSizeInBytes() + sizeOf(ids);
+        this.retainedSizeInBytes = INSTANCE_SIZE + sizeOf(ids);
 
         if (dictionaryIsCompacted) {
             if (dictionary instanceof DictionaryBlock) {
                 throw new IllegalArgumentException("compacted dictionary should not have dictionary base block");
             }
-            this.sizeInBytes = this.retainedSizeInBytes;
+            this.sizeInBytes = dictionary.getSizeInBytes() + (Integer.BYTES * (long) positionCount);
             this.uniqueIds = dictionary.getPositionCount();
         }
     }
@@ -284,7 +286,7 @@ public class DictionaryBlock
     @Override
     public long getRetainedSizeInBytes()
     {
-        return retainedSizeInBytes;
+        return retainedSizeInBytes + dictionary.getRetainedSizeInBytes();
     }
 
     @Override
@@ -397,6 +399,12 @@ public class DictionaryBlock
             return this;
         }
         return new DictionaryBlock(idsOffset, getPositionCount(), loadedDictionary, ids, false, randomDictionaryId());
+    }
+
+    @Override
+    public final List<Block> getChildren()
+    {
+        return singletonList(getDictionary());
     }
 
     public Block getDictionary()
